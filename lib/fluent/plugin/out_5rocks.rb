@@ -48,7 +48,7 @@ class Fluent::FiveRocksOutput < Fluent::BufferedOutput
     ret = []
     chunk.msgpack_each do |tag, time, record|
       params = @field_map.each_with_object({}) do |(k, v), p|
-        p[k] = /(^\$\()(.*)(\)$)/ =~ v ? record[$2] : v
+        p[k] = v.gsub(/\$\((.+)\)/) { record[$1] }
       end
       log.debug "request parameters: #{params}"
       res = Net::HTTP.post_form(URI.parse(@url), params)

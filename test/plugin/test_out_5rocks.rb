@@ -14,6 +14,7 @@ class FiveRocksOutputTest < Test::Unit::TestCase
       type custom
       name test_from_plugin
       category cat_a
+      p1 prefix_$(data_key)
       <values>
         key_a val_a
         key_b $(data_key)
@@ -40,6 +41,7 @@ class FiveRocksOutputTest < Test::Unit::TestCase
       "type" => "custom",
       "name" => "test_from_plugin",
       "category" => "cat_a",
+      "p1" => "prefix_$(data_key)",
       "values[key_a]" => "val_a",
       "values[key_b]" => "$(data_key)",
     }
@@ -72,11 +74,11 @@ class FiveRocksOutputTest < Test::Unit::TestCase
     expected = [
       {
         "app_key" => "test_app_key", "type" => "custom", "name" => "test_from_plugin", "category" => "cat_a",
-        "values[key_a]" => "val_a", "values[key_b]"=>7
+        "p1" => "prefix_7", "values[key_a]" => "val_a", "values[key_b]" => "7"
       },
       {
         "app_key" => "test_app_key", "type" => "custom", "name" => "test_from_plugin", "category" => "cat_a",
-        "values[key_a]" => "val_a", "values[key_b]"=>5
+        "p1" => "prefix_5", "values[key_a]" => "val_a", "values[key_b]" => "5"
       }
     ]
     assert_equal expected, params
