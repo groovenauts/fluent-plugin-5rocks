@@ -18,8 +18,8 @@ class Fluent::FiveRocksOutput < Fluent::BufferedOutput
     @field_map = {
       'app_key' => conf['app_key'],
       'name' => conf['name'],
-      'category' => conf['category'],
     }
+    @field_map['category'] = conf['category'] if conf['category']
     conf.elements.select { |e|
       e.name == "field"
     }.each { |f|
@@ -48,11 +48,13 @@ class Fluent::FiveRocksOutput < Fluent::BufferedOutput
   def write(chunk)
     ret = []
     chunk.msgpack_each do |tag, time, record|
+      log.debug "record from fluentd: #{record}"
+
       params = @field_map.each_with_object({}) do |(k, v), p|
         if /^\$\(([^)]+)\)$/ =~ v
           p[k] = record[$1] # can be ::String, ::Numeric, etc.
         else
-          p[k] = v.gsub(/\$\(([^)]+)\)/) { record[$1] } # ::String
+          p[k] = v ? v.gsub(/\$\(([^)]+)\)/) { record[$1] } : nil # ::String
         end
       end
       t = params["time"] || time
