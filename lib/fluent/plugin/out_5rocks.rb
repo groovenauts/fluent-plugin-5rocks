@@ -9,6 +9,7 @@ class Fluent::FiveRocksOutput < Fluent::BufferedOutput
     super
     require 'net/http'
     require 'uri'
+    require "time"
   end
 
   def configure(conf)
@@ -48,8 +49,19 @@ class Fluent::FiveRocksOutput < Fluent::BufferedOutput
     ret = []
     chunk.msgpack_each do |tag, time, record|
       params = @field_map.each_with_object({}) do |(k, v), p|
-        p[k] = v.gsub(/\$\((.+)\)/) { record[$1] }
+        if /^\$\(([^)]+)\)$/ =~ v
+          p[k] = record[$1] # can be ::String, ::Numeric, etc.
+        else
+          p[k] = v.gsub(/\$\(([^)]+)\)/) { record[$1] } # ::String
+        end
       end
+      t = params["time"] || time
+      t = Time.parse(t) if t.is_a?(::String)
+      t = t.to_f * 1000 if t.is_a?(::Date) or t.is_a?(::Time)
+      t = [t / 1000, t, t * 1000].min_by { |_t| (Time.now.to_f * 1000 - _t).abs } # to milliseconds
+      t = t.to_i
+      params["time"] = t
+
       log.debug "request parameters: #{params}"
       res = Net::HTTP.post_form(URI.parse(@url), params)
       log.debug "response code: #{res.code}"
