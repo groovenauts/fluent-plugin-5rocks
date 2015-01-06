@@ -48,7 +48,7 @@ class Fluent::FiveRocksOutput < Fluent::BufferedOutput
   def write(chunk)
     ret = []
     chunk.msgpack_each do |tag, time, record|
-      log.debug "record from fluentd: #{record}"
+      log.debug "tag: #{tag}, record: #{record}"
 
       params = @field_map.each_with_object({}) do |(k, v), p|
         if /^\$\(([^)]+)\)$/ =~ v
